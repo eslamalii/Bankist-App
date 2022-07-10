@@ -61,9 +61,14 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
-const displayMovements = (acc) => {
+const displayMovements = (acc, sort = false) => {
   containerMovements.innerHTML = '';
-  acc.movements.forEach((mov, i) => {
+
+  const movs = sort
+    ? acc.movements.slice().sort((a, b) => a - b)
+    : acc.movements;
+
+  movs.forEach((mov, i) => {
     const type = mov > 0 ? 'deposit' : 'withdrawal';
     const html = `
     <div class="movements__row">
@@ -165,7 +170,7 @@ btnTransfer.addEventListener('click', (e) => {
     amount > 0 &&
     receiverAcc &&
     currentAccount.balance >= amount &&
-    receiverAcc.balance < receiverAcc?.username !== currentAccount.username
+    receiverAcc?.username !== currentAccount.username
   ) {
     //Transfer
     currentAccount.movements.push(-amount);
@@ -176,6 +181,51 @@ btnTransfer.addEventListener('click', (e) => {
   }
 });
 
+btnLoan.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  const amount = Number(inputLoanAmount.value);
+
+  if (
+    amount > 0 &&
+    currentAccount.movements.some((mov) => mov >= amount / 10)
+  ) {
+    // Add Movement
+    currentAccount.movements.push(amount);
+
+    // Update UI
+    updateUI(currentAccount);
+  }
+  inputLoanAmount.value = '';
+});
+
+btnClose.addEventListener('click', function (e) {
+  e.preventDefault();
+
+  if (
+    inputCloseUsername.value === currentAccount.username &&
+    Number(inputClosePin.value) === currentAccount.pin
+  ) {
+    const index = accounts.findIndex(
+      (acc) => acc.username === currentAccount.username
+    );
+
+    // Delete Account
+    accounts.splice(index, 1);
+
+    // Hide UI
+    containerApp.style.opacity = 0;
+  }
+  inputCloseUsername.value = inputClosePin.value = '';
+});
+
+let sorted = false;
+
+btnSort.addEventListener('click', function (e) {
+  e.preventDefault();
+  displayMovements(currentAccount, !sorted);
+  sorted = !sorted;
+});
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // LECTURES
